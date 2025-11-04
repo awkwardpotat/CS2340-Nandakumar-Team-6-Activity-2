@@ -1,5 +1,6 @@
 from django.db import models
 from django.contrib.auth.models import User
+from accounts.models import Owner, Reviewer
 
 # Create your models here.
 #restaurant and reviews here
@@ -8,6 +9,8 @@ class Restaurant(models.Model):
     name = models.CharField(max_length=255)
     average_rating = models.DecimalField(decimal_places=2, max_digits = 3)
     description = models.CharField(max_length=255)
+    # to filter: Restaurant.objects.filter(owner = [OWNER ID HERE])
+    owner = models.ForeignKey(Owner, on_delete=models.CASCADE, null=True)
     
     #LOCATION DATA
     city = models.CharField(max_length=100, blank=True)
@@ -44,6 +47,7 @@ class Review(models.Model):
     date = models.DateTimeField(auto_now_add=True)
     restaurant = models.ForeignKey(Restaurant, on_delete=models.CASCADE)
     #USER might mess things up vv
-    user = models.ForeignKey(User, on_delete=models.CASCADE)
+    # to filter: Review.objects.filter(user = [REVIEWER ID HERE])
+    reviewer = models.ForeignKey(Reviewer, on_delete=models.CASCADE, null=True)
     def __str__(self):
         return str(self.id) + ' - ' + self.restaurant.name
