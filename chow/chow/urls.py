@@ -6,9 +6,11 @@ The `urlpatterns` list routes URLs to views. For more information please see:
 """
 from django.contrib import admin
 from django.urls import path, include
-from django.shortcuts import render
+from django.shortcuts import render, redirect
 from django.contrib.auth.models import User
 from restaurants.models import Restaurant, Review
+from django.conf import settings
+from django.conf.urls.static import static
 
 def home(request):
     context = {
@@ -19,10 +21,20 @@ def home(request):
     }
     return render(request, 'home.html', context)
 
+def favorites(request):
+    if not request.user.is_authenticated:
+        return redirect('accounts.login')
+    restaurants = request.user.favorite_restaurants.all()
+    return render(request, 'favorites.html', {'restaurants': restaurants})
+
 urlpatterns = [
     path('', home, name='home'),
-    path('admin/', admin.site.urls),
-    path('map/', include('map.urls')),
-    path('restaurants/', include('restaurants.urls')),
-    path('accounts/', include('accounts.urls')),
+        path('favorites/', favorites, name='favorites'),
+        path('admin/', admin.site.urls),
+        path('map/', include('map.urls')),
+        path('restaurants/', include('restaurants.urls')),
+        path('accounts/', include('accounts.urls')),
 ]
+
+if settings.DEBUG:
+    urlpatterns += static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
