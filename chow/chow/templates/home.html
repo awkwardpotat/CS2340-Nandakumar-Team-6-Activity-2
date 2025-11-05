@@ -1,0 +1,140 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block extra_css %}
+<link rel="stylesheet" href="{% static 'css/home.css' %}">
+{% endblock %}
+
+{% block content %}
+<div class="home-hero text-center">
+  <div class="container">
+    <h1 class="mb-3">Welcome to Chow</h1>
+    <p class="lead">Discover amazing restaurants, share your experiences, and connect with food lovers</p>
+    {% if not user.is_authenticated %}
+    <div class="auth-buttons d-flex justify-content-center gap-3">
+      <a href="{% url 'accounts.login' %}" class="btn btn-dark btn-lg">Login</a>
+      <a href="{% url 'accounts.signup' %}" class="btn btn-outline-dark btn-lg">Sign Up</a>
+    </div>
+    {% endif %}
+  </div>
+</div>
+
+<div class="home-stats">
+  <div class="container">
+    <div class="row">
+      <div class="col-md-4">
+        <div class="stat-item">
+          <div class="number">{{ restaurant_count|default:"100+" }}</div>
+          <div class="label">Restaurants</div>
+        </div>
+      </div>
+      <div class="col-md-4">
+        <div class="stat-item">
+          <div class="number">{{ review_count|default:"500+" }}</div>
+          <div class="label">Reviews</div>
+        </div>
+      </div>
+      <div class="col-md-4">
+        <div class="stat-item">
+          <div class="number">{{ user_count|default:"1000+" }}</div>
+          <div class="label">Food Lovers</div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="container">
+  <div class="row mb-5">
+    <div class="col-md-4">
+      <div class="card feature-card h-100">
+        <div class="card-body text-center">
+          <div class="mb-4">
+            <i class="fas fa-utensils fa-3x text-dark"></i>
+          </div>
+          <h3 class="card-title h4 mb-3">Find Restaurants</h3>
+          <p class="card-text">Explore restaurants in your area and discover new favorites.</p>
+          <a href="{% url 'restaurants.index' %}" class="btn btn-dark">Browse Restaurants</a>
+        </div>
+      </div>
+    </div>
+    {% if user.is_authenticated %}
+    <div class="col-md-4">
+      <div class="card feature-card h-100">
+        <div class="card-body text-center">
+          <div class="mb-4">
+            <i class="fas fa-star fa-3x text-dark"></i>
+          </div>
+          <h3 class="card-title h4 mb-3">Write Reviews</h3>
+          <p class="card-text">Share your dining experiences and help others discover great food.</p>
+          <a href="{% url 'restaurants.index' %}" class="btn btn-dark">Start Reviewing</a>
+        </div>
+      </div>
+    </div>
+    <div class="col-md-4">
+      <div class="card feature-card h-100">
+        <div class="card-body text-center">
+          <div class="mb-4">
+            <i class="fas fa-heart fa-3x text-dark"></i>
+          </div>
+          <h3 class="card-title h4 mb-3">Your Favorites</h3>
+          <p class="card-text">Keep track of your favorite restaurants and easily find them again.</p>
+          <a href="{% url 'restaurants.index' %}" class="btn btn-dark">View Favorites</a>
+        </div>
+      </div>
+    </div>
+    {% else %}
+    <div class="col-md-4">
+      <div class="card feature-card h-100">
+        <div class="card-body text-center">
+          <div class="mb-4">
+            <i class="fas fa-users fa-3x text-dark"></i>
+          </div>
+          <h3 class="card-title h4 mb-3">Join Our Community</h3>
+          <p class="card-text">Create an account to review restaurants and save your favorites.</p>
+          <a href="{% url 'accounts.signup' %}" class="btn btn-dark">Sign Up Now</a>
+        </div>
+      </div>
+    </div>
+    <div class="col-md-4">
+      <div class="card feature-card h-100">
+        <div class="card-body text-center">
+          <div class="mb-4">
+            <i class="fas fa-comment fa-3x text-dark"></i>
+          </div>
+          <h3 class="card-title h4 mb-3">Browse Reviews</h3>
+          <p class="card-text">Read honest reviews from our community members.</p>
+          <a href="{% url 'restaurants.index' %}" class="btn btn-dark">Read Reviews</a>
+        </div>
+      </div>
+    </div>
+    {% endif %}
+  </div>
+
+  {% if featured_restaurants %}
+  <div class="featured-section">
+    <div class="container">
+      <h2 class="text-center">Featured Restaurants</h2>
+      <div class="row">
+        {% for restaurant in featured_restaurants %}
+        <div class="col-md-4 mb-4">
+          <div class="card restaurant-card h-100">
+            <div class="card-body">
+              <h5 class="card-title mb-3">{{ restaurant.name }}</h5>
+              <p class="card-text mb-4">{{ restaurant.description }}</p>
+              <div class="d-flex justify-content-between align-items-center">
+                <div class="rating">
+                  <i class="fas fa-star"></i> {{ restaurant.average_rating }}
+                </div>
+                <a href="{% url 'restaurants.show' id=restaurant.id %}" class="btn btn-dark">View Details</a>
+              </div>
+            </div>
+          </div>
+        </div>
+        {% endfor %}
+      </div>
+    </div>
+  </div>
+  {% endif %}
+</div>
+{% endblock %}

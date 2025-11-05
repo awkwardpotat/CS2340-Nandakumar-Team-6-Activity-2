@@ -11,6 +11,7 @@ class Restaurant(models.Model):
     description = models.CharField(max_length=255)
     # to filter: Restaurant.objects.filter(owner = [OWNER ID HERE])
     owner = models.ForeignKey(Owner, on_delete=models.CASCADE, null=True)
+    favorites = models.ManyToManyField(User, blank=True, related_name='favorite_restaurants')
     
     #LOCATION DATA
     city = models.CharField(max_length=100, blank=True)

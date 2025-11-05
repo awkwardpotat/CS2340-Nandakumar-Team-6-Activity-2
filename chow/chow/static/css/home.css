@@ -1,0 +1,137 @@
+/* Home page specific styles */
+.home-hero {
+    background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
+    padding: 6rem 2rem !important;
+    margin-bottom: 3rem;
+    border-radius: 0 0 2rem 2rem;
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+}
+
+.home-hero h1 {
+    font-weight: 700;
+    color: #212529;
+    margin-bottom: 1.5rem;
+    font-size: 3.5rem;
+}
+
+.home-hero .lead {
+    font-size: 1.4rem;
+    color: #495057;
+    max-width: 800px;
+    margin: 0 auto 2rem;
+}
+
+.feature-card {
+    transition: transform 0.2s, box-shadow 0.2s;
+    border: none;
+    border-radius: 1rem;
+    overflow: hidden;
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+}
+
+.feature-card:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 8px 12px rgba(0, 0, 0, 0.15);
+}
+
+.feature-card .card-body {
+    padding: 2rem;
+}
+
+.feature-card .card-title {
+    color: #212529;
+    font-weight: 600;
+}
+
+.feature-card .btn {
+    margin-top: 1rem;
+    border-radius: 0.5rem;
+    padding: 0.5rem 1.5rem;
+}
+
+.featured-section {
+    padding: 4rem 0;
+    background: #f8f9fa;
+    border-radius: 2rem;
+    margin: 2rem 0;
+}
+
+.featured-section h2 {
+    font-weight: 700;
+    color: #212529;
+    margin-bottom: 2.5rem;
+}
+
+.restaurant-card {
+    border: none;
+    border-radius: 1rem;
+    overflow: hidden;
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+    transition: transform 0.2s;
+}
+
+.restaurant-card:hover {
+    transform: translateY(-5px);
+}
+
+.restaurant-card .card-body {
+    padding: 1.5rem;
+}
+
+.restaurant-card .rating {
+    background: #212529;
+    color: white;
+    padding: 0.3rem 0.8rem;
+    border-radius: 1rem;
+    font-size: 0.9rem;
+}
+
+.auth-buttons .btn {
+    padding: 0.8rem 2rem;
+    border-radius: 0.5rem;
+    font-weight: 500;
+    letter-spacing: 0.5px;
+}
+
+.home-stats {
+    background: white;
+    padding: 2rem 0;
+    margin-top: -2rem;
+    margin-bottom: 4rem;
+}
+
+.stat-item {
+    text-align: center;
+    padding: 1rem;
+}
+
+.stat-item .number {
+    font-size: 2.5rem;
+    font-weight: 700;
+    color: #212529;
+    margin-bottom: 0.5rem;
+}
+
+.stat-item .label {
+    color: #6c757d;
+    font-size: 1.1rem;
+}
+
+/* Responsive adjustments */
+@media (max-width: 768px) {
+    .home-hero {
+        padding: 4rem 1rem !important;
+    }
+    
+    .home-hero h1 {
+        font-size: 2.5rem;
+    }
+    
+    .home-hero .lead {
+        font-size: 1.2rem;
+    }
+    
+    .feature-card {
+        margin-bottom: 1.5rem;
+    }
+}

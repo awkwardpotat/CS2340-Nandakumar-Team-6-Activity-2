@@ -1,12 +1,53 @@
 {% extends 'base.html' %}
 {% block content %}
 {% load static %}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const csrfToken = document.querySelector('[name=csrfmiddlewaretoken]').value;
+    const favoriteBtn = document.getElementById('favorite-btn');
+    
+    if (favoriteBtn) {
+        favoriteBtn.addEventListener('click', function() {
+            fetch('{% url "restaurants.toggle_favorite" id=template_data.restaurant.id %}', {
+                method: 'POST',
+                headers: {
+                    'X-CSRFToken': csrfToken,
+                    'X-Requested-With': 'XMLHttpRequest'
+                }
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.is_favorite) {
+                    favoriteBtn.classList.remove('btn-outline-danger');
+                    favoriteBtn.classList.add('btn-danger');
+                    favoriteBtn.innerHTML = '♥ Unfavorite';
+                } else {
+                    favoriteBtn.classList.remove('btn-danger');
+                    favoriteBtn.classList.add('btn-outline-danger');
+                    favoriteBtn.innerHTML = '♡ Favorite';
+                }
+            });
+        });
+    }
+});</script>
 <div class="p-3">
   <div class="container">
     <div class="row mt-3">
       <div class="col-md-6 mx-auto mb-3">
         <h2>{{ template_data.restaurant.name }}</h2>
         <hr />
+        {% if user.is_authenticated %}
+        <form method="POST" action="{% url 'restaurants.toggle_favorite' id=template_data.restaurant.id %}" class="mb-3">
+          {% csrf_token %}
+          <button type="button" id="favorite-btn" class="btn {% if template_data.is_favorite %}btn-danger{% else %}btn-outline-danger{% endif %} btn-lg">
+            {% if template_data.is_favorite %}
+            <span style="font-size: 1.2em;">♥</span> Unfavorite
+            {% else %}
+            <span style="font-size: 1.2em;">♡</span> Favorite
+            {% endif %}
+          </button>
+        </form>
+        {% endif %}
         <p><b>Description:</b> {{template_data.restaurant.description }}</p>
         <p><b>Price Range:</b> {{template_data.restaurant.get_price_range_display }}</p>
         <p><b>Average Rating:</b> {{template_data.restaurant.average_rating }}</p>

@@ -1,4 +1,5 @@
 from django.shortcuts import render, redirect, get_object_or_404
+from django.http import JsonResponse
 from .models import Restaurant, Review
 from django.contrib.auth.decorators import login_required
 
@@ -18,14 +19,17 @@ def show(request, id):
     
     reviews = Review.objects.filter(restaurant=restaurant)
     can_review = False
+    is_favorite = False
     if request.user.is_authenticated:
         can_review = not Review.objects.filter(restaurant=restaurant, user=request.user).exists()
+        is_favorite = request.user in restaurant.favorites.all()
 
     template_data = {}
     template_data['title'] = restaurant.name
     template_data['restaurant'] = restaurant
     template_data['reviews'] = reviews
     template_data['can_review'] = can_review
+    template_data['is_favorite'] = is_favorite
     return render(request, 'restaurants/show.html', {'template_data': template_data})
 
 @login_required
@@ -68,4 +72,24 @@ def edit_review(request, id, review_id):
 def delete_review(request, id, review_id):
     review = get_object_or_404(Review, id=review_id, user=request.user)
     review.delete()
+    return redirect('restaurants.show', id=id)
+
+@login_required
+def toggle_favorite(request, id):
+    if request.method != 'POST':
+        return redirect('restaurants.show', id=id)
+        
+    restaurant = get_object_or_404(Restaurant, id=id)
+    if request.user in restaurant.favorites.all():
+        restaurant.favorites.remove(request.user)
+        is_favorite = False
+    else:
+        restaurant.favorites.add(request.user)
+        is_favorite = True
+    
+    # If it's an AJAX request, return JSON
+    if request.headers.get('X-Requested-With') == 'XMLHttpRequest':
+        return JsonResponse({'is_favorite': is_favorite})
+    
+    # Otherwise redirect back to the restaurant page
     return redirect('restaurants.show', id=id)
