@@ -1,6 +1,7 @@
 from django.shortcuts import render, redirect, get_object_or_404
 from django.http import JsonResponse
 from .models import Restaurant, Review
+from accounts.models import Owner
 from django.contrib.auth.decorators import login_required
 
 # Create your views here.

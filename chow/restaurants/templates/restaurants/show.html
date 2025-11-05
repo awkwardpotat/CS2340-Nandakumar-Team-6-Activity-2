@@ -60,14 +60,14 @@ document.addEventListener('DOMContentLoaded', function() {
           {% for review in template_data.reviews %}
           <ul class="list-group-item pb-3 pt-3">
             <h5 class="card-title">
-              Review by {{ review.user.username }}
+              Review by {{ review.reviewer.user.username }}
             </h5>
             <h6 class="card-subtitle mb-2 text-muted">
               {{ review.date }}
             </h6>
             <p class="card-text">{{ review.rating }}</p>
             <p class="card-text">{{ review.comment }}</p>
-            {% if user.is_authenticated and user == review.user %}
+            {% if user.is_authenticated and user == review.reviewer.user %}
             <a class="btn btn-primary"
               href="{% url 'restaurants.edit_review' id=template_data.restaurant.id review_id=review.id %}">
               Edit
@@ -113,7 +113,8 @@ document.addEventListener('DOMContentLoaded', function() {
         {% endif %}
       </div>
       <div class="col-md-6 mx-auto mb-3 text-center">
-        <img src="{{ template_data.restaurant.image.url }}" class="rounded img-card-400" />
+        <h2>Gallery</h2>
+        <img src="{{ template_data.restaurant.image.url }}" class="rounded img-fluid" style="max-height: 400px; object-fit: cover; width: 100%;" />
       </div>
     </div>
   </div>

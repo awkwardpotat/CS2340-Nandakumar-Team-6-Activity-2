@@ -14,7 +14,7 @@
 <body class="d-flex flex-column min-vh-100">
     <nav class="navbar navbar-expand-lg navbar-dark bg-dark">
         <div class="container">
-            <a class="navbar-brand" href="{% url 'home' %}">Chow</a>
+            <a class="navbar-brand" href="{% url 'home.home' %}">Chow</a>
             <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
                 <span class="navbar-toggler-icon"></span>
             </button>
@@ -28,7 +28,7 @@
                 <ul class="navbar-nav">
                     {% if user.is_authenticated %}
                     <li class="nav-item">
-                        <a class="nav-link" href="{% url 'accounts.logout' %}">Logout</a>
+                        <a class="nav-link" href="{% url 'accounts.logout' %}">({{user.username}}) Logout</a>
                     </li>
                     {% else %}
                     <li class="nav-item">

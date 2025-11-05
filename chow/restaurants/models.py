@@ -53,3 +53,4 @@ class Review(models.Model):
     reviewer = models.ForeignKey(Reviewer, on_delete=models.CASCADE, null=True)
     def __str__(self):
         return str(self.id) + ' - ' + self.restaurant.name
+    

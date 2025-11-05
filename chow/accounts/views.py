@@ -47,8 +47,8 @@ def login(request):
             return render(request, 'accounts/login.html', {'template_data': template_data})
         else:
             auth_login(request, user)
-            return redirect('home')
+            return redirect('home.home')
 
 def logout(request):
     auth_logout(request)
-    return redirect('home')
+    return redirect('home.home')
