@@ -1,6 +1,6 @@
 from django.shortcuts import render, redirect, get_object_or_404
 from django.http import JsonResponse
-from .models import Restaurant, Review
+from .models import Restaurant, Review, ReviewReply
 from accounts.models import Owner
 from django.contrib.auth.decorators import login_required
 
@@ -29,6 +29,14 @@ def show(request, id):
         except Reviewer.DoesNotExist:
             can_review = False
         is_favorite = request.user in restaurant.favorites.all()
+    
+    is_owner = False
+    if request.user.is_authenticated and restaurant.owner:
+        try:
+            owner = Owner.objects.get(user=request.user)
+            is_owner = (restaurant.owner == owner)
+        except Owner.DoesNotExist:
+            pass
 
     template_data = {}
     template_data['title'] = restaurant.name
@@ -36,6 +44,7 @@ def show(request, id):
     template_data['reviews'] = reviews
     template_data['can_review'] = can_review
     template_data['is_favorite'] = is_favorite
+    template_data['is_owner'] = is_owner
     return render(request, 'restaurants/show.html', {'template_data': template_data})
 
 @login_required
@@ -108,4 +117,48 @@ def toggle_favorite(request, id):
         return JsonResponse({'is_favorite': is_favorite})
     
     # Otherwise redirect back to the restaurant page
+    return redirect('restaurants.show', id=id)
+
+
+@login_required
+def create_reply(request, id, review_id):
+    if request.method == 'POST':
+        restaurant = get_object_or_404(Restaurant, id=id)
+        review = get_object_or_404(Review, id=review_id, restaurant=restaurant)
+        
+        # Check if user is either the owner OR the reviewer
+        is_owner = False
+        is_reviewer = (review.reviewer.user == request.user)
+        
+        if restaurant.owner:
+            try:
+                owner = Owner.objects.get(user=request.user)
+                is_owner = (restaurant.owner == owner)
+            except Owner.DoesNotExist:
+                pass
+        
+        if not (is_owner or is_reviewer):
+            return redirect('restaurants.show', id=id)
+        
+        reply_text = request.POST.get('reply_text')
+        if reply_text:
+            ReviewReply.objects.create(
+                review=review,
+                author_user=request.user,
+                reply_text=reply_text
+            )
+        
+    return redirect('restaurants.show', id=id)
+
+@login_required
+def delete_reply(request, id, review_id, reply_id):
+    if request.method == 'POST':
+        restaurant = get_object_or_404(Restaurant, id=id)
+        review = get_object_or_404(Review, id=review_id, restaurant=restaurant)
+        reply = get_object_or_404(ReviewReply, id=reply_id, review=review)
+        
+        # Only the person who wrote the reply can delete it
+        if reply.author_user == request.user:
+            reply.delete()
+    
     return redirect('restaurants.show', id=id)

@@ -53,4 +53,23 @@ class Review(models.Model):
     reviewer = models.ForeignKey(Reviewer, on_delete=models.CASCADE, null=True)
     def __str__(self):
         return str(self.id) + ' - ' + self.restaurant.name
+
+class ReviewReply(models.Model):
+    review = models.ForeignKey(Review, on_delete=models.CASCADE, related_name='replies')
+    author_user = models.ForeignKey(User, on_delete=models.CASCADE)
+    reply_text = models.TextField()
+    date = models.DateTimeField(auto_now_add=True)
     
+    class Meta:
+        ordering = ['date']
+    
+    def __str__(self):
+        return f"Reply by {self.author_user.username} on review {self.review.id}"
+    
+    def is_owner_reply(self):
+        """Check if this reply was written by the restaurant owner"""
+        try:
+            owner = Owner.objects.get(user=self.author_user)
+            return self.review.restaurant.owner == owner
+        except Owner.DoesNotExist:
+            return False
