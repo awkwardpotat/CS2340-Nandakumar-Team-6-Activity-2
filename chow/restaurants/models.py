@@ -7,13 +7,13 @@ from accounts.models import Owner, Reviewer
 class Restaurant(models.Model):
     id = models.AutoField(primary_key=True)
     name = models.CharField(max_length=255)
-    average_rating = models.DecimalField(decimal_places=2, max_digits = 3)
+    average_rating = models.DecimalField(decimal_places=2, max_digits = 3, null=True, blank=True)
     description = models.CharField(max_length=255)
     # to filter: Restaurant.objects.filter(owner = [OWNER ID HERE])
     owner = models.ForeignKey(Owner, on_delete=models.CASCADE, null=True)
     favorites = models.ManyToManyField(User, blank=True, related_name='favorite_restaurants')
     image = models.ImageField(upload_to='restaurant_images/', null=True, blank=True)
-    
+
     #LOCATION DATA
     city = models.CharField(max_length=100, blank=True)
     state = models.CharField(max_length=100, blank=True)
@@ -37,9 +37,9 @@ class Restaurant(models.Model):
             total = sum(review.rating for review in reviews)
             self.average_rating = total / reviews.count()
         else:
-            self.average_rating = 0
+            self.average_rating = None
         self.save()
-    
+
     #image gallery how??
 
 class Review(models.Model):
@@ -59,13 +59,13 @@ class ReviewReply(models.Model):
     author_user = models.ForeignKey(User, on_delete=models.CASCADE)
     reply_text = models.TextField()
     date = models.DateTimeField(auto_now_add=True)
-    
+
     class Meta:
         ordering = ['date']
-    
+
     def __str__(self):
         return f"Reply by {self.author_user.username} on review {self.review.id}"
-    
+
     def is_owner_reply(self):
         """Check if this reply was written by the restaurant owner"""
         try:
