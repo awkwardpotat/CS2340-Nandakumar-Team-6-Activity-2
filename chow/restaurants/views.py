@@ -21,7 +21,12 @@ def show(request, id):
     can_review = False
     is_favorite = False
     if request.user.is_authenticated:
-        can_review = not Review.objects.filter(restaurant=restaurant, user=request.user).exists()
+        from accounts.models import Reviewer
+        try:
+            reviewer = Reviewer.objects.get(user=request.user)
+            can_review = not Review.objects.filter(restaurant=restaurant, reviewer=reviewer).exists()
+        except Reviewer.DoesNotExist:
+            can_review = False
         is_favorite = request.user in restaurant.favorites.all()
 
     template_data = {}
@@ -36,11 +41,16 @@ def show(request, id):
 def create_review(request, id):
     if request.method == 'POST' and request.POST['comment'] != '' and request.POST['rating'] != 0:
         restaurant = Restaurant.objects.get(id=id)
+        from accounts.models import Reviewer
+        try:
+            reviewer = Reviewer.objects.get(user=request.user)
+        except Reviewer.DoesNotExist:
+            return redirect('restaurants.show', id=id)
         review = Review()
         review.comment = request.POST['comment']
         review.rating = request.POST['rating']
         review.restaurant = restaurant
-        review.user = request.user
+        review.reviewer = reviewer
         review.save()
         review.restaurant.update_average_rating()
         return redirect('restaurants.show', id=id)
@@ -50,7 +60,7 @@ def create_review(request, id):
 @login_required
 def edit_review(request, id, review_id):
     review = get_object_or_404(Review, id=review_id)
-    if request.user != review.user:
+    if not hasattr(review, 'reviewer') or review.reviewer is None or request.user != review.reviewer.user:
         return redirect('restaurants.show', id=id)
 
     if request.method == 'GET':
@@ -70,7 +80,12 @@ def edit_review(request, id, review_id):
     
 @login_required
 def delete_review(request, id, review_id):
-    review = get_object_or_404(Review, id=review_id, user=request.user)
+    from accounts.models import Reviewer
+    try:
+        reviewer = Reviewer.objects.get(user=request.user)
+    except Reviewer.DoesNotExist:
+        return redirect('restaurants.show', id=id)
+    review = get_object_or_404(Review, id=review_id, reviewer=reviewer)
     review.delete()
     return redirect('restaurants.show', id=id)
 

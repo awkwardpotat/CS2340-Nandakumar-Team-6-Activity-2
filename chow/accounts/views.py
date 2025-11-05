@@ -48,3 +48,7 @@ def login(request):
         else:
             auth_login(request, user)
             return redirect('home')
+
+def logout(request):
+    auth_logout(request)
+    return redirect('home')

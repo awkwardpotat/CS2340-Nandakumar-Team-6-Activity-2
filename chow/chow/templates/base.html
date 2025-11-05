@@ -23,11 +23,7 @@
                     <li class="nav-item">
                         <a class="nav-link" href="{% url 'restaurants.index' %}">Restaurants</a>
                     </li>
-                    {% if user.is_authenticated %}
-                    <li class="nav-item">
-                        <a class="nav-link" href="{% url 'restaurants.index' %}">My Reviews</a>
-                    </li>
-                    {% endif %}
+                    
                 </ul>
                 <ul class="navbar-nav">
                     {% if user.is_authenticated %}
@@ -62,9 +58,7 @@
                     <h5>Quick Links</h5>
                     <ul class="list-unstyled">
                         <li><a href="{% url 'restaurants.index' %}" class="text-light">Restaurants</a></li>
-                        {% if user.is_authenticated %}
-                        <li><a href="#" class="text-light">My Reviews</a></li>
-                        {% else %}
+                        {% if not user.is_authenticated %}
                         <li><a href="{% url 'accounts.signup' %}" class="text-light">Join Now</a></li>
                         {% endif %}
                     </ul>
