@@ -12,7 +12,7 @@ class Restaurant(models.Model):
     # to filter: Restaurant.objects.filter(owner = [OWNER ID HERE])
     owner = models.ForeignKey(Owner, on_delete=models.CASCADE, null=True)
     favorites = models.ManyToManyField(User, blank=True, related_name='favorite_restaurants')
-    image = models.ImageField(upload_to='restaurant_images/', null=True, blank=True)
+    image = models.ImageField(upload_to='restaurant_images', null=True, blank=True)
 
     #LOCATION DATA
     city = models.CharField(max_length=100, blank=True)
