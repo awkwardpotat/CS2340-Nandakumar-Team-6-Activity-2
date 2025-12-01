@@ -166,10 +166,23 @@ document.addEventListener('DOMContentLoaded', function() {
       </div>
       <div class="col-md-6 mx-auto mb-3 text-center">
         <h2>Gallery</h2>
-        {% if template_data.restaurant.image %}
+        {% comment %}Show gallery images (RestaurantImage via related_name 'images'){% endcomment %}
+        {% if template_data.restaurant.images.all %}
+        <div class="row">
+          {% for img in template_data.restaurant.images.all %}
+          <div class="col-6 mb-3">
+            <a href="{{ img.image.url }}" target="_blank">
+              <img src="{{ img.image.url }}" class="img-fluid" style="max-height:200px; object-fit:cover; width:100%; border-radius:0.5rem;" alt="{{ img.alt_text|default:template_data.restaurant.name }}">
+            </a>
+          </div>
+          {% endfor %}
+        </div>
+        {% elif template_data.restaurant.image %}
         <img src="{{ template_data.restaurant.image.url }}" class="img-fluid mb-3" style="max-height:300px; object-fit:contain; width:100%; border-radius:0.5rem;" alt="{{ template_data.restaurant.name }} image">
+        {% else %}
+        <p>No images available.</p>
+        {% endif %}
       </div>
-      {% endif %}
     </div>
   </div>
 </div>

@@ -40,6 +40,10 @@ class Restaurant(models.Model):
             self.average_rating = None
         self.save()
 
+    def get_gallery(self):
+        """Return gallery images ordered by their `order` field."""
+        return self.images.all()
+
     #image gallery how??
 
 class Review(models.Model):
@@ -73,3 +77,21 @@ class ReviewReply(models.Model):
             return self.review.restaurant.owner == owner
         except Owner.DoesNotExist:
             return False
+
+
+class RestaurantImage(models.Model):
+    """Gallery image for a Restaurant.
+
+    Use `restaurant.images` (related_name) to access the gallery.
+    """
+    id = models.AutoField(primary_key=True)
+    restaurant = models.ForeignKey(Restaurant, on_delete=models.CASCADE, related_name='images')
+    image = models.ImageField(upload_to='restaurant_images/')
+    alt_text = models.CharField(max_length=255, blank=True)
+    uploaded_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        ordering = ['uploaded_at']
+
+    def __str__(self):
+        return f"Image {self.id} for {self.restaurant.name}"

@@ -1,6 +1,41 @@
-{% extends 'base.html' %}
+{% extends "base.html" %}
 {% block content %}
-{% load static %}
-<p>MAP GOES HERE</p>
-<p>go to /restaurants</p>
+
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+
+<div class="container mt-4">
+  <h1>Restaurant Map</h1>
+  <p class="text-muted">Click on a marker to view restaurant details.</p>
+  <div id="map" style="height: 600px; width: 100%; border-radius: 5px; border: 1px solid #ccc;"></div>
+</div>
+
+<script>
+  // Initialize map centered on USA
+  const map = L.map('map').setView([39.8283, -98.5795], 4);
+  L.tileLayer('https://tile.openstreetmap.org/{z}/{x}/{y}.png', {
+    maxZoom: 18,
+    attribution: '© OpenStreetMap'
+  }).addTo(map);
+
+  // Add restaurant markers
+  const restaurants = JSON.parse('{{ restaurants_json|escapejs }}');
+  restaurants.forEach(function(restaurant) {
+    if (restaurant.latitude && restaurant.longitude) {
+      const marker = L.marker([restaurant.latitude, restaurant.longitude]).addTo(map);
+      marker.bindPopup(
+        '<strong>' + restaurant.name + '</strong><br>' +
+        'Rating: ' + (restaurant.average_rating || 'N/A') + '<br>' +
+        '<a href="/restaurants/' + restaurant.id + '/">View Details</a>'
+      );
+    }
+  });
+
+  // Try to geolocate user
+  if (navigator.geolocation) {
+    navigator.geolocation.getCurrentPosition(position => {
+      map.setView([position.coords.latitude, position.coords.longitude], 10);
+    });
+  }
+</script>
 {% endblock content %}

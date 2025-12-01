@@ -120,6 +120,10 @@ USE_TZ = True
 
 STATIC_URL = 'static/'
 STATIC_ROOT = os.path.join(BASE_DIR, 'static')
+# Media files (user-uploaded)
+MEDIA_URL = '/media/'
+# Store uploaded files in the `media/` directory at the project root
+MEDIA_ROOT = os.path.join(BASE_DIR, 'media')
 # Default primary key field type
 # https://docs.djangoproject.com/en/5.2/ref/settings/#default-auto-field
 
