@@ -15,7 +15,8 @@
         <div class="mb-3">{{ form.name.label_tag }}{{ form.name }}</div>
         <div class="mb-3">{{ form.description.label_tag }}{{ form.description }}</div>
         <div class="mb-3">{{ form.price_range.label_tag }}{{ form.price_range }}</div>
-        <div class="mb-3">{{ form.image.label_tag }}{{ form.image }}</div>
+        <div class="mb-3">{{ form.image.label_tag }}{{ form.image }}
+        </div>
         <div class="mb-3">
           <label for="id_gallery_images">Gallery images</label>
           <input id="id_gallery_images" type="file" name="gallery_images" multiple accept="image/*" class="form-control" />
@@ -36,9 +37,9 @@
       </div>
 
       <div class="col-md-6">
-        <label>Pin Restaurant Location (click on map):</label>
+        <label>Selected Restaurant Location:</label>
         <div id="map" style="height: 400px; width: 100%; border-radius: 5px; border: 1px solid #ccc;"></div>
-        <p class="text-muted small mt-1">Clicking the map will set the latitude and longitude fields.</p>
+        <p class="text-muted small mt-1">Scroll to verify location is correct.</p>
       </div>
     </div>
   </form>
