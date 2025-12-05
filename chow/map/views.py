@@ -11,5 +11,8 @@ def show_map(request):
         'id', 'name', 'latitude', 'longitude', 'average_rating'
     )
     restaurants_json = json.dumps(list(restaurants))
-    context = {'restaurants_json': restaurants_json}
+    context = {
+        'restaurants_json': restaurants_json,
+        'is_authenticated': request.user.is_authenticated,
+    }
     return render(request, 'map/map.html', context)

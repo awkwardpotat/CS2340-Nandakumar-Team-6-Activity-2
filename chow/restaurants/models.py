@@ -12,7 +12,7 @@ class Restaurant(models.Model):
     # to filter: Restaurant.objects.filter(owner = [OWNER ID HERE])]
     # Set this value when creating a restaurant. Creating user might be deleted, so allow blank and don't cascade.
     creator = models.ForeignKey(User, on_delete=models.DO_NOTHING, null=True, blank=True) 
-    # Ask if the user is the owner of the restaurant they are creating. If not, leave null.
+    # ask if the user is the owner of the restaurant they are creating. If not, leave null.
     owner = models.ForeignKey(Owner, on_delete=models.CASCADE, null=True, blank=True) 
     favorites = models.ManyToManyField(User, blank=True, related_name='favorite_restaurants')
     image = models.ImageField(upload_to='restaurant_images/', null=True, blank=True)
@@ -46,8 +46,6 @@ class Restaurant(models.Model):
     def get_gallery(self):
         """Return gallery images ordered by their `order` field."""
         return self.images.all()
-
-    #image gallery how??
 
 class Review(models.Model):
     id = models.AutoField(primary_key=True)
