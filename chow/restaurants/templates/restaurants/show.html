@@ -40,16 +40,32 @@ document.addEventListener('DOMContentLoaded', function() {
         <h2>{{ template_data.restaurant.name }}</h2>
         <hr />
         {% if user.is_authenticated %}
-        <form method="POST" action="{% url 'restaurants.toggle_favorite' id=template_data.restaurant.id %}" class="mb-3">
-          {% csrf_token %}
-          <button type="button" id="favorite-btn" class="btn {% if template_data.is_favorite %}btn-danger{% else %}btn-outline-danger{% endif %} btn-lg">
-            {% if template_data.is_favorite %}
-            <span style="font-size: 1.2em;">♥</span> Unfavorite
-            {% else %}
-            <span style="font-size: 1.2em;">♡</span> Favorite
-            {% endif %}
-          </button>
-        </form>
+          <form method="POST" action="{% url 'restaurants.toggle_favorite' id=template_data.restaurant.id %}" class="mb-3">
+            {% csrf_token %}
+            <button type="button" id="favorite-btn" class="btn {% if template_data.is_favorite %}btn-danger{% else %}btn-outline-danger{% endif %} btn-lg">
+              {% if template_data.is_favorite %}
+              <span style="font-size: 1.2em;">♥</span> Unfavorite
+              {% else %}
+              <span style="font-size: 1.2em;">♡</span> Favorite
+              {% endif %}
+            </button>
+          </form>
+          {% if user.owner %}
+            <form method="POST" action="{% url 'restaurants.toggle_claim' id=template_data.restaurant.id %}" class="mb-3">
+              {% csrf_token %}  
+              {% if template_data.restaurant.owner %}
+                {% if template_data.restaurant.owner.user == user %}
+                  <button type="submit" onclick="return confirm('Are you sure you want to revoke ownership of this restaurant page?')" id="unclaim-btn" class="btn btn-danger btn-sm" >
+                    Unclaim
+                  </button>
+                {% endif %}
+              {% else %}
+                <button type="submit" onclick="return confirm('Are you sure you want to claim ownership this restaurant page?')" id="claim-btn" class="btn btn-outline-danger btn-lg" >
+                  Is this restaurant yours?
+                </button>
+              {% endif %}
+            </form>
+          {% endif %}
         {% endif %}
         <p><b>Description:</b> {{template_data.restaurant.description }}</p>
         <p><b>Price Range:</b> {{template_data.restaurant.get_price_range_display }}</p>
