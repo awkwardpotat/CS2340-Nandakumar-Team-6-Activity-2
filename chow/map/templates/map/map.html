@@ -4,10 +4,32 @@
 <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
 
-<div class="container mt-4">
+  <div class="container mt-4">
   <h1>Restaurant Map</h1>
-  <p class="text-muted">Click on a marker to view restaurant details.</p>
-  <div id="map" style="height: 600px; width: 100%; border-radius: 5px; border: 1px solid #ccc;"></div>
+  <p class="text-muted">Click on a marker to view restaurant details. Click on any location to mark a new restaurant.</p>
+  <div class="mb-3 d-flex align-items-center flex-wrap">
+    <label for="ratingFilter" class="form-label me-2">Minimum rating:</label>
+    <select id="ratingFilter" class="form-select" style="width:120px; display:inline-block; vertical-align:middle; margin-right:12px;">
+      <option value="all">All</option>
+      <option value="3">3+ stars</option>
+      <option value="4">4+ stars</option>
+    </select>
+
+    <span class="me-2">Price:</span>
+    <label class="form-check-label me-2"><input type="checkbox" id="price_cheap" value="cheap" checked> $</label>
+    <label class="form-check-label me-2"><input type="checkbox" id="price_medium" value="medium" checked> $$</label>
+    <label class="form-check-label me-2"><input type="checkbox" id="price_pricey" value="pricey" checked> $$$</label>
+
+    <div style="margin-left:20px; display:flex; align-items:center; gap:8px;">
+      <label class="form-label mb-0">Distance (miles):</label>
+      <input id="distance-input" type="number" min="0" step="0.1" placeholder="e.g. 10" style="width:100px" class="form-control" />
+      <button id="apply-distance" class="btn btn-sm btn-primary">Apply</button>
+      <button id="clear-distance" class="btn btn-sm btn-secondary">Clear</button>
+    </div>
+    
+  </div>
+  <div class="mb-2"><small id="restaurant-count" class="text-muted"></small></div>
+  <div id="map" data-authenticated="{{ is_authenticated|yesno:'true,false' }}" style="height: 600px; width: 100%; border-radius: 5px; border: 1px solid #ccc;"></div>
 </div>
 
 <script>
@@ -18,23 +40,137 @@
     attribution: '© OpenStreetMap'
   }).addTo(map);
 
-  // Add restaurant markers
+  // Add restaurant markers (create all markers once and filter client-side)
   const restaurants = JSON.parse('{{ restaurants_json|escapejs }}');
+  const markersData = []; // { restaurant, marker }
+  let userLocation = null;
+  let userMarker = null;
+  let distanceFilterMiles = null; // null = no distance filter
   restaurants.forEach(function(restaurant) {
     if (restaurant.latitude && restaurant.longitude) {
-      const marker = L.marker([restaurant.latitude, restaurant.longitude]).addTo(map);
+      const marker = L.marker([restaurant.latitude, restaurant.longitude]);
       marker.bindPopup(
         '<strong>' + restaurant.name + '</strong><br>' +
         'Rating: ' + (restaurant.average_rating || 'N/A') + '<br>' +
         '<a href="/restaurants/' + restaurant.id + '/">View Details</a>'
       );
+      marker.addTo(map);
+      markersData.push({ restaurant: restaurant, marker: marker });
     }
   });
 
-  // Try to geolocate user
+  function updateMarkers() {
+    const ratingFilter = document.getElementById('ratingFilter').value;
+    const minRating = ratingFilter === 'all' ? 0 : parseFloat(ratingFilter);
+    const selectedPrices = [];
+    if (document.getElementById('price_cheap').checked) selectedPrices.push('cheap');
+    if (document.getElementById('price_medium').checked) selectedPrices.push('medium');
+    if (document.getElementById('price_pricey').checked) selectedPrices.push('pricey');
+
+    let visibleCount = 0;
+    markersData.forEach(function(entry) {
+      const r = entry.restaurant;
+      const m = entry.marker;
+      const avg = r.average_rating ? parseFloat(r.average_rating) : 0;
+      const price = r.price_range || '';
+      const passesRating = avg >= minRating;
+      const passesPrice = selectedPrices.length === 0 || selectedPrices.includes(price);
+
+      // distance check
+      let passesDistance = true;
+      if (distanceFilterMiles !== null) {
+        if (!userLocation) {
+          passesDistance = false; // user location unknown
+        } else {
+          const d = calculateDistance(userLocation.lat, userLocation.lon, r.latitude, r.longitude);
+          passesDistance = d <= distanceFilterMiles;
+        }
+      }
+
+      const shouldShow = passesRating && passesPrice && passesDistance;
+      if (shouldShow) {
+        if (!map.hasLayer(m)) map.addLayer(m);
+        visibleCount++;
+      } else {
+        if (map.hasLayer(m)) map.removeLayer(m);
+      }
+    });
+
+    // update count display
+    const countEl = document.getElementById('restaurant-count');
+    if (distanceFilterMiles !== null && userLocation) {
+      countEl.textContent = `Showing ${visibleCount} of ${restaurants.length} restaurants within ${distanceFilterMiles} miles`;
+    } else {
+      countEl.textContent = `Showing ${visibleCount} of ${restaurants.length} restaurants`;
+    }
+  }
+
+  // Haversine formula to calculate miles between lat/lon pairs
+  function calculateDistance(lat1, lon1, lat2, lon2) {
+    const R = 3959; // miles
+    const dLat = (lat2 - lat1) * Math.PI / 180;
+    const dLon = (lon2 - lon1) * Math.PI / 180;
+    const a = Math.sin(dLat/2) * Math.sin(dLat/2) +
+              Math.cos(lat1 * Math.PI / 180) * Math.cos(lat2 * Math.PI / 180) *
+              Math.sin(dLon/2) * Math.sin(dLon/2);
+    const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
+    return R * c;
+  }
+  
+
+  // attach listeners to filter controls
+  document.getElementById('ratingFilter').addEventListener('change', updateMarkers);
+  document.getElementById('price_cheap').addEventListener('change', updateMarkers);
+  document.getElementById('price_medium').addEventListener('change', updateMarkers);
+  document.getElementById('price_pricey').addEventListener('change', updateMarkers);
+
+  // distance filter buttons
+  document.getElementById('apply-distance').addEventListener('click', function() {
+    const val = document.getElementById('distance-input').value;
+    const parsed = parseFloat(val);
+    if (!val || isNaN(parsed) || parsed <= 0) {
+      alert('Please enter a valid distance in miles');
+      return;
+    }
+    if (!userLocation) {
+      alert('Waiting for your location... Please allow location access in your browser.');
+      return;
+    }
+    distanceFilterMiles = parsed;
+    updateMarkers();
+  });
+  document.getElementById('clear-distance').addEventListener('click', function() {
+    distanceFilterMiles = null;
+    document.getElementById('distance-input').value = '';
+    updateMarkers();
+  });
+
+  // apply initial filter state
+  updateMarkers();
+
+  // Try to geolocate user and add a user marker
   if (navigator.geolocation) {
     navigator.geolocation.getCurrentPosition(position => {
-      map.setView([position.coords.latitude, position.coords.longitude], 10);
+        userLocation = { lat: position.coords.latitude, lon: position.coords.longitude };
+        map.setView([userLocation.lat, userLocation.lon], 10);
+        // add a simple default marker for the user's location
+        userMarker = L.marker([userLocation.lat, userLocation.lon]).addTo(map).bindPopup('Your Location');
+    }, function(error) {
+      console.log('Geolocation error:', error);
+    });
+  }
+
+  // If user is authenticated, allow clicking map to create a new restaurant
+  const mapEl = document.getElementById('map');
+  const isAuthenticated = mapEl && mapEl.dataset && mapEl.dataset.authenticated === 'true';
+  if (isAuthenticated) {
+    map.on('click', function(e) {
+      const lat = e.latlng.lat.toFixed(6);
+      const lng = e.latlng.lng.toFixed(6);
+      if (confirm('Create a restaurant at this location?')) {
+        // Redirect to restaurant create page with lat/lng as query params
+        window.location.href = "{% url 'restaurants.create' %}?lat=" + lat + '&lng=' + lng;
+      }
     });
   }
 </script>

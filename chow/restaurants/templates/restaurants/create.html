@@ -1,0 +1,82 @@
+{% extends "base.html" %}
+{% block content %}
+{% load static %}
+
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+
+<div class="container mt-4">
+  <h1>Create Restaurant</h1>
+  <form method="post" enctype="multipart/form-data">
+    {% csrf_token %}
+    <div class="row">
+      <div class="col-md-6">
+        {{ form.non_field_errors }}
+        <div class="mb-3">{{ form.name.label_tag }}{{ form.name }}</div>
+        <div class="mb-3">{{ form.description.label_tag }}{{ form.description }}</div>
+        <div class="mb-3">{{ form.price_range.label_tag }}{{ form.price_range }}</div>
+        <div class="mb-3">{{ form.image.label_tag }}{{ form.image }}
+        </div>
+        <div class="mb-3">
+          <label for="id_gallery_images">Gallery images</label>
+          <input id="id_gallery_images" type="file" name="gallery_images" multiple accept="image/*" class="form-control" />
+          <small class="form-text text-muted">You can upload multiple images; they will be added to the restaurant's gallery.</small>
+        </div>
+        {# hidden address component fields (city/state/country) and lat/lng #}
+        {{ form.city }}{{ form.state }}{{ form.country }}{{ form.latitude }}{{ form.longitude }}
+        <div class="mb-3">{{ form.location.label_tag }}{{ form.location }}</div>
+
+        {% if is_owner %}
+        <div class="form-check mb-3">
+          <input class="form-check-input" type="checkbox" id="set_owner" name="set_owner">
+          <label class="form-check-label" for="set_owner">I am the owner of this restaurant</label>
+        </div>
+        {% endif %}
+
+        <button type="submit" class="btn btn-primary">Create</button>
+      </div>
+
+      <div class="col-md-6">
+        <label>Selected Restaurant Location:</label>
+        <div id="map" style="height: 400px; width: 100%; border-radius: 5px; border: 1px solid #ccc;"></div>
+        <p class="text-muted small mt-1">Scroll to verify location is correct.</p>
+      </div>
+    </div>
+  </form>
+</div>
+
+<script>
+  const map = L.map('map').setView([39.8283, -98.5795], 4);
+  L.tileLayer('https://tile.openstreetmap.org/{z}/{x}/{y}.png', {
+    maxZoom: 18,
+    attribution: '© OpenStreetMap'
+  }).addTo(map);
+
+  let marker = null;
+  const latInput = document.getElementById('id_latitude');
+  const lngInput = document.getElementById('id_longitude');
+
+  // If the form had initial coords, show marker
+  if (latInput && latInput.value && lngInput && lngInput.value) {
+    marker = L.marker([parseFloat(latInput.value), parseFloat(lngInput.value)]).addTo(map);
+    map.setView([parseFloat(latInput.value), parseFloat(lngInput.value)], 13);
+  }
+
+  map.on('click', function(e) {
+    const lat = e.latlng.lat.toFixed(6);
+    const lng = e.latlng.lng.toFixed(6);
+    if (!marker) {
+      marker = L.marker(e.latlng).addTo(map);
+    }
+    if (latInput) latInput.value = lat;
+    if (lngInput) lngInput.value = lng;
+  });
+
+  if (navigator.geolocation) {
+    navigator.geolocation.getCurrentPosition(position => {
+      map.setView([position.coords.latitude, position.coords.longitude], 10);
+    });
+  }
+</script>
+
+{% endblock content %}

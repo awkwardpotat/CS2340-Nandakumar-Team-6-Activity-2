@@ -1,8 +1,12 @@
 from django.shortcuts import render, redirect, get_object_or_404
 from django.http import JsonResponse
-from .models import Restaurant, Review, ReviewReply
+from .models import Restaurant, Review, ReviewReply, RestaurantImage
 from accounts.models import Owner
 from django.contrib.auth.decorators import login_required
+from .forms import RestaurantForm
+from django.contrib import messages
+from geopy.geocoders import Nominatim
+from geopy.exc import GeocoderTimedOut, GeocoderServiceError
 
 # Create your views here.
 def index(request):
@@ -185,3 +189,75 @@ def toggle_claim(request, id):
 
         restaurant.save()
         return redirect('restaurants.show', id=id)
+
+
+@login_required
+def create_restaurant(request):
+    from accounts.models import Owner
+
+    # check if current user has an Owner profile
+    try:
+        owner = Owner.objects.get(user=request.user)
+    except Owner.DoesNotExist:
+        owner = None
+
+    if request.method == 'POST':
+        form = RestaurantForm(request.POST, request.FILES)
+        if form.is_valid():
+            restaurant = form.save(commit=False)
+            restaurant.creator = request.user
+            # Build a human-friendly `location` string from city/state/country
+            city = form.cleaned_data.get('city') or ''
+            state = form.cleaned_data.get('state') or ''
+            country = form.cleaned_data.get('country') or ''
+            parts = [p.strip() for p in (city, state, country) if p and p.strip()]
+            if parts:
+                restaurant.location = ', '.join(parts)
+            # set owner if user is owner and checked the box
+            if owner and request.POST.get('set_owner') == 'on':
+                restaurant.owner = owner
+            restaurant.save()
+            # handle gallery images uploaded via the non-model field `gallery_images`
+            files = request.FILES.getlist('gallery_images')
+            for f in files:
+                RestaurantImage.objects.create(restaurant=restaurant, image=f)
+            #messages.success(request, 'Restaurant created')
+            return redirect('restaurants.show', id=restaurant.id)
+    else:
+        # GET: prefill lat/lng from query params if present
+        initial = {}
+        lat = request.GET.get('lat')
+        lng = request.GET.get('lng')
+        if lat and lng:
+            initial['latitude'] = lat
+            initial['longitude'] = lng
+            # perform reverse geocoding to populate city/state/country
+            try:
+                geolocator = Nominatim(user_agent="chow_app")
+                location = geolocator.reverse(f"{lat}, {lng}", timeout=10)
+                if location and location.raw and 'address' in location.raw:
+                    addr = location.raw['address']
+                    # address may use different keys; try common ones
+                    city = addr.get('city') or addr.get('town') or addr.get('village') or addr.get('municipality') or ''
+                    state = addr.get('state') or ''
+                    country = addr.get('country') or ''
+                    if city:
+                        initial['city'] = city
+                    if state:
+                        initial['state'] = state
+                    if country:
+                        initial['country'] = country
+                    # Build a clean location string without extra commas when parts are missing
+                    parts = [p.strip() for p in (city, state, country) if p and p.strip()]
+                    if parts:
+                        initial['location'] = ', '.join(parts)
+            except (GeocoderTimedOut, GeocoderServiceError):
+                # ignore geocoding errors and leave fields blank
+                pass
+        form = RestaurantForm(initial=initial)
+
+    # Make the combined `location` field readonly so users see the resolved place
+    if 'location' in form.fields:
+        form.fields['location'].widget.attrs['readonly'] = True
+
+    return render(request, 'restaurants/create.html', {'form': form, 'is_owner': bool(owner)})
