@@ -165,3 +165,23 @@ def delete_reply(request, id, review_id, reply_id):
             reply.delete()
 
     return redirect('restaurants.show', id=id)
+
+@login_required
+def toggle_claim(request, id):
+    if request.method == 'POST':
+        
+        restaurant = get_object_or_404(Restaurant, id=id)
+        # If restaurant has an owner and it's the current user -> unclaim
+        if restaurant.owner is not None and restaurant.owner.user == request.user:
+            restaurant.owner = None
+        # If restaurant has no owner, try to assign the current user's Owner profile
+        elif restaurant.owner is None:
+            try:
+                owner = Owner.objects.get(user=request.user)
+                restaurant.owner = owner
+            except Owner.DoesNotExist:
+                # current user isn't an Owner; do nothing
+                pass
+
+        restaurant.save()
+        return redirect('restaurants.show', id=id)

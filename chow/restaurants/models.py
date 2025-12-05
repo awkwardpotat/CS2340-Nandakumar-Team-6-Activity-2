@@ -9,8 +9,11 @@ class Restaurant(models.Model):
     name = models.CharField(max_length=255)
     average_rating = models.DecimalField(decimal_places=2, max_digits = 3, null=True, blank=True)
     description = models.CharField(max_length=255)
-    # to filter: Restaurant.objects.filter(owner = [OWNER ID HERE])
-    owner = models.ForeignKey(Owner, on_delete=models.CASCADE, null=True)
+    # to filter: Restaurant.objects.filter(owner = [OWNER ID HERE])]
+    # Set this value when creating a restaurant. Creating user might be deleted, so allow blank and don't cascade.
+    creator = models.ForeignKey(User, on_delete=models.DO_NOTHING, null=True, blank=True) 
+    # Ask if the user is the owner of the restaurant they are creating. If not, leave null.
+    owner = models.ForeignKey(Owner, on_delete=models.CASCADE, null=True, blank=True) 
     favorites = models.ManyToManyField(User, blank=True, related_name='favorite_restaurants')
     image = models.ImageField(upload_to='restaurant_images/', null=True, blank=True)
 
