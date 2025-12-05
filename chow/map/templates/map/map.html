@@ -74,7 +74,9 @@
       const avg = r.average_rating ? parseFloat(r.average_rating) : 0;
       const price = r.price_range || '';
       const passesRating = avg >= minRating;
-      const passesPrice = selectedPrices.length === 0 || selectedPrices.includes(price);
+      // If no price boxes are selected, treat that as "no prices chosen" -> show none.
+      // Otherwise, only pass if the restaurant's price_range is one of the selected ones.
+      const passesPrice = selectedPrices.length === 0 ? false : selectedPrices.includes(price);
 
       // distance check
       let passesDistance = true;
